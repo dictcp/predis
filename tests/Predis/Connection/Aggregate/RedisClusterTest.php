@@ -277,9 +277,9 @@ class RedisClusterTest extends PredisTestCase
         $cluster->setSlots(2730, 4095, '127.0.0.1:6381');
 
         $expectedMap = array_merge(
-            array_fill(0, 1365, '127.0.0.1:6379'),
-            array_fill(1364, 1365, '127.0.0.1:6380'),
-            array_fill(2729, 1366, '127.0.0.1:6381')
+            array_fill(0, 1365, ['127.0.0.1:6379']),
+            array_fill(1364, 1365, ['127.0.0.1:6380']),
+            array_fill(2729, 1366, ['127.0.0.1:6381'])
         );
 
         $this->assertSame($expectedMap, $cluster->getSlotsMap());
@@ -297,7 +297,7 @@ class RedisClusterTest extends PredisTestCase
         $cluster->add($connection1);
 
         $cluster->setSlots(0, 4095, '127.0.0.1:6379');
-        $this->assertSame(array_fill(0, 4096, '127.0.0.1:6379'), $cluster->getSlotsMap());
+        $this->assertSame(array_fill(0, 4096, ['127.0.0.1:6379']), $cluster->getSlotsMap());
 
         $cluster->add($connection2);
 
@@ -320,8 +320,8 @@ class RedisClusterTest extends PredisTestCase
         $cluster->setSlots(2048, 4095, '127.0.0.1:6380');
 
         $expectedMap = array_merge(
-            array_fill(0, 2048, '127.0.0.1:6379'),
-            array_fill(2048, 2048, '127.0.0.1:6380')
+            array_fill(0, 2048, ['127.0.0.1:6379']),
+            array_fill(2048, 2048, ['127.0.0.1:6380'])
         );
 
         $this->assertSame($expectedMap, $cluster->getSlotsMap());
@@ -345,9 +345,9 @@ class RedisClusterTest extends PredisTestCase
         $cluster->add($connection3);
 
         $expectedMap = array_merge(
-            array_fill(0, 5461, '127.0.0.1:6379'),
-            array_fill(5460, 5461, '127.0.0.1:6380'),
-            array_fill(10921, 5462, '127.0.0.1:6381')
+            array_fill(0, 5461, ['127.0.0.1:6379']),
+            array_fill(5460, 5461, ['127.0.0.1:6380']),
+            array_fill(10921, 5462, ['127.0.0.1:6381'])
         );
 
         $cluster->buildSlotsMap();
