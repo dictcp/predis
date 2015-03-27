@@ -50,6 +50,7 @@ use Predis\Response\ErrorInterface as ErrorResponseInterface;
 class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
 {
     private $useClusterSlots = true;
+    private $useMasterInReadConnection = true;
     private $defaultParameters = array();
     private $pool = array();
     private $slots = array();
@@ -331,9 +332,9 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
         }
 
         if (!$this->replication_strategy->isReadOperation($command)) {
-            return $this->getConnectionBySlots($slot, $this->slots, true);
+            return $this->getConnectionBySlot($slot);
         } else {
-            return $this->getConnectionBySlots($slot, $this->slaveSlots, false);
+            return $this->getReadConnectionBySlot($slot);
         }
     }
 
@@ -349,6 +350,16 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
     public function getConnectionBySlot($slot)
     {
         return $this->getConnectionBySlots($slot, $this->slots, true);
+    }
+
+    /**
+     * @param int $slot Slot index.
+     * @return NodeConnectionInterface
+     * @throws \OutOfBoundsException
+     */
+    public function getReadConnectionBySlot($slot)
+    {
+        return $this->getConnectionBySlots($slot, $this->slaveSlots, false);
     }
 
     /**
@@ -372,6 +383,8 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
         // master only
         if ($flag) {
             $connectionIDs = array_slice($connectionIDs, 0, 1);
+        } else if (count($connectionIDs) > 1 && !$this->useMasterInReadConnection) {
+            $connectionIDs = array_slice($connectionIDs, 1);
         }
 
         $connectionID = $connectionIDs[array_rand($connectionIDs)];
@@ -578,6 +591,14 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
     public function useClusterSlots($value)
     {
         $this->useClusterSlots = (bool) $value;
+    }
+
+    /**
+     * @param $value
+     */
+    public function useMasterInReadConnection($value)
+    {
+        $this->useMasterInReadConnection = (bool) $value;
     }
 
     /**

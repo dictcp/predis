@@ -752,6 +752,58 @@ class RedisClusterTest extends PredisTestCase
         $this->assertEquals($cluster, $unserialized);
     }
 
+    /**
+     * @group disconnected
+     */
+    public function testSlaveReadConnectionCommand()
+    {
+        $response = array(
+            array(12288, 13311, array('10.1.0.51', 6387), array('10.1.0.52', 6387)),
+            array(3072 ,  4095, array('10.1.0.52', 6392), array('10.1.0.51', 6392)),
+            array(6144 ,  7167, array('', 6384), array('10.1.0.52', 6384)),
+            array(14336, 15359, array('10.1.0.51', 6388), array('10.1.0.52', 6388)),
+            array(15360, 16383, array('10.1.0.52', 6398), array('10.1.0.51', 6398)),
+            array(1024 ,  2047, array('10.1.0.52', 6391), array('10.1.0.51', 6391)),
+            array(11264, 12287, array('10.1.0.52', 6396), array('10.1.0.51', 6396)),
+            array( 5120,  6143, array('10.1.0.52', 6393), array('10.1.0.51', 6393)),
+            array(    0,  1023, array('10.1.0.51', 6381), array('10.1.0.52', 6381)),
+            array(13312, 14335, array('10.1.0.52', 6397), array('10.1.0.51', 6397)),
+            array( 4096,  5119, array('10.1.0.52', 6391), array('10.1.0.51', 6391)),
+            array( 9216, 10239, array('10.1.0.52', 6395), array('10.1.0.51', 6395)),
+            array( 8192,  9215, array('10.1.0.51', 6385), array('10.1.0.52', 6385)),
+            array(10240, 11263, array('10.1.0.51', 6386), array('10.1.0.52', 6386)),
+            array( 2048,  3071, array('10.1.0.51', 6382), array('10.1.0.52', 6382)),
+            array( 7168,  8191, array('10.1.0.52', 6394), array('10.1.0.51', 6394)),
+        );
+
+        $command1 = Command\RawCommand::create('CLUSTER', 'SLOTS');
+        $command2 = Command\RawCommand::create('GET', '116');
+
+        $connection1 = $this->getMockConnection('tcp://10.1.0.51:6384');
+        $connection1->expects($this->once())
+            ->method('executeCommand')
+            ->with($command1)
+            ->will($this->returnValue($response));
+
+        $connection2 = $this->getMockConnection('tcp://10.1.0.51:6391');
+        $connection2->expects($this->once())
+            ->method('executeCommand')
+            ->with($command2)
+            ->will($this->returnValue($response));
+
+        $factory = $this->getMock('Predis\Connection\Factory');
+
+        $cluster = new RedisCluster($factory);
+        $cluster->add($connection1);
+        $cluster->add($connection2);
+
+        $cluster->useMasterInReadConnection(false);
+        $cluster->askSlotsMap($connection1);
+        $cluster->executeCommand($command2);
+
+        $this->assertSame($cluster->getReadConnectionBySlot('1024'), $connection2);
+    }
+
     // ******************************************************************** //
     // ---- HELPER METHODS ------------------------------------------------ //
     // ******************************************************************** //
