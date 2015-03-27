@@ -176,7 +176,7 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
             }
 
             $slots = explode('-', $parameters->slots, 2);
-            $this->setSlotsWithConnections($slots[0], $slots[1], [$connectionID]);
+            $this->setSlotsWithConnections($slots[0], $slots[1], array($connectionID));
         }
     }
 
@@ -202,7 +202,7 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
             list($start, $end, $master) = $slots;
 
             if ($master[0] === '') {
-                $this->setSlotsWithConnections($start, $end, [(string)$connection]);
+                $this->setSlotsWithConnections($start, $end, array((string)$connection));
             } else {
                 $nodes = array_slice($slots, 2);
                 $nodes = array_map(function ($x) {
@@ -241,7 +241,7 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
      */
     public function setSlots($first, $last, $connection)
     {
-        $this->setSlotsWithConnections($first, $last, [$connection]);
+        $this->setSlotsWithConnections($first, $last, array($connection));
     }
 
     private function setSlotsWithConnections($first, $last, $connections)
@@ -293,7 +293,7 @@ class RedisCluster implements ClusterInterface, IteratorAggregate, Countable
         $index = min((int)($slot / (int)(16384 / $count)), $count - 1);
         $nodes = array_keys($this->pool);
 
-        return [$nodes[$index]];
+        return array($nodes[$index]);
     }
 
     /**
